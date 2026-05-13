@@ -9,16 +9,15 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { eventCategories } from "@/lib/types";
 import { createSupabaseClient } from "@/src/lib/supabase/client";
-
-const categories = ["Social", "Career", "Sports", "Food", "Study", "Outdoors"] as const;
 
 const createEventSchema = z
   .object({
     title: z.string().trim().min(1, "Add a title so people know the plan."),
     description: z.string().trim().optional(),
     location: z.string().trim().min(1, "Add where people should meet."),
-    category: z.enum(categories, {
+    category: z.enum(eventCategories, {
       error: "Pick a category.",
     }),
     starts_at: z.string().min(1, "Add when it starts."),
@@ -179,7 +178,7 @@ export default function CreateEventPage() {
 
               <Field label="What kind of plan?" error={errors.category?.message}>
                 <select className={fieldClassName} {...register("category")}>
-                  {categories.map((category) => (
+                  {eventCategories.map((category) => (
                     <option key={category} value={category}>
                       {category}
                     </option>

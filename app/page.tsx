@@ -8,10 +8,8 @@ import {
   Sparkles,
 } from "lucide-react";
 
-import { CategoryFilter } from "@/components/events/category-filter";
-import { EventFeed } from "@/components/events/event-feed";
+import { HomeEventFeed } from "@/components/events/home-event-feed";
 import { Button } from "@/components/ui/button";
-import { categories, mockEvents } from "@/lib/mock-events";
 
 const navItems = [
   { label: "Home", href: "/", icon: Home, active: true },
@@ -50,38 +48,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <section aria-labelledby="categories-heading" className="space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <h2 id="categories-heading" className="text-sm font-semibold">
-              Browse by category
-            </h2>
-            <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
-              View calendar
-            </Button>
-          </div>
-
-          <CategoryFilter categories={categories} />
-        </section>
-
-        <section aria-labelledby="events-heading" className="space-y-4">
-          <div className="flex items-end justify-between gap-3">
-            <div>
-              <p className="text-sm font-medium text-[#65705f]">Upcoming</p>
-              <h2
-                id="events-heading"
-                className="text-2xl font-semibold text-[#171717]"
-              >
-                Plans worth showing up for
-              </h2>
-            </div>
-            <Button className="hidden bg-[#1f3025] text-white hover:bg-[#2b4434] sm:inline-flex">
-              <Plus className="size-4" aria-hidden="true" />
-              Post event
-            </Button>
-          </div>
-
-          <EventFeed events={mockEvents} />
-        </section>
+        <HomeEventFeed />
       </section>
 
       <BottomNav />

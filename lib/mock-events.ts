@@ -1,13 +1,4 @@
-import type { Category, Event } from "@/lib/types";
-
-export const categories: Category[] = [
-  "Social",
-  "Career",
-  "Sports",
-  "Food",
-  "Study",
-  "Outdoors",
-];
+import type { Event } from "@/lib/types";
 
 export const mockEvents: Event[] = [
   {
@@ -16,6 +7,7 @@ export const mockEvents: Event[] = [
     description: "Bring snacks, blankets, and anyone from your pod.",
     category: "Social",
     startsAt: "Today, 6:30 PM",
+    startsAtIso: new Date().toISOString(),
     location: "Lake Union Park",
     creatorName: "Maya Chen",
     rsvpCounts: {
@@ -30,6 +22,7 @@ export const mockEvents: Event[] = [
     description: "Casual peer feedback before final manager chats.",
     category: "Career",
     startsAt: "Tomorrow, 5:00 PM",
+    startsAtIso: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     location: "Building 92 Cafe",
     creatorName: "Intern Council",
     rsvpCounts: {
@@ -44,6 +37,7 @@ export const mockEvents: Event[] = [
     description: "All skill levels. Teams made when people arrive.",
     category: "Sports",
     startsAt: "Sat, 11:00 AM",
+    startsAtIso: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
     location: "Golden Gardens",
     creatorName: "Andre Patel",
     rsvpCounts: {
@@ -58,6 +52,7 @@ export const mockEvents: Event[] = [
     description: "Meet at the entrance, split into small food groups.",
     category: "Food",
     startsAt: "Sun, 7:15 PM",
+    startsAtIso: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
     location: "Uwajimaya entrance",
     creatorName: "Nora Ali",
     rsvpCounts: {

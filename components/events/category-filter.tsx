@@ -2,11 +2,13 @@ import type { Category } from "@/lib/types";
 
 type CategoryFilterProps = {
   categories: Category[];
+  onSelectCategory?: (category: Category | "All") => void;
   selectedCategory?: Category | "All";
 };
 
 export function CategoryFilter({
   categories,
+  onSelectCategory,
   selectedCategory = "All",
 }: CategoryFilterProps) {
   const options = ["All", ...categories] as const;
@@ -24,6 +26,7 @@ export function CategoryFilter({
                 ? "h-9 shrink-0 rounded-full bg-[#1f3025] px-4 text-sm font-medium text-white shadow-sm"
                 : "h-9 shrink-0 rounded-full border border-[#ddd3c6] bg-white px-4 text-sm font-medium text-[#48433d] transition-colors hover:bg-[#f0ebe3]"
             }
+            onClick={() => onSelectCategory?.(category)}
             type="button"
           >
             {category}

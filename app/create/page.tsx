@@ -1,15 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, CalendarDays, Loader2, MapPin, PartyPopper } from "lucide-react";
+import { ArrowLeft, CalendarDays, Loader2, MapPin } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { eventCategories } from "@/lib/types";
+import { upsertProfile } from "@/src/lib/supabase/profile";
 import { createSupabaseClient } from "@/src/lib/supabase/client";
 
 const createEventSchema = z
@@ -59,6 +60,7 @@ export default function CreateEventPage() {
   const router = useRouter();
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   const {
     register,
@@ -74,6 +76,22 @@ export default function CreateEventPage() {
     },
   });
 
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      supabase.auth.getUser().then(async ({ data }) => {
+        if (!data.user) {
+          router.replace("/login");
+          return;
+        }
+
+        await upsertProfile(supabase, data.user);
+        setIsCheckingAuth(false);
+      });
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [router, supabase]);
+
   async function onSubmit(values: CreateEventValues) {
     setSubmitError(null);
 
@@ -83,10 +101,11 @@ export default function CreateEventPage() {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      // TODO: Redirect to login once auth screens are in place.
-      setSubmitError("You need to be signed in before posting an event.");
+      router.replace("/login");
       return;
     }
+
+    await upsertProfile(supabase, user);
 
     const { data, error } = await supabase
       .from("events")
@@ -114,148 +133,165 @@ export default function CreateEventPage() {
 
   return (
     <main className="min-h-screen bg-[#f7f4ef] text-foreground">
-      <section className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-5 sm:px-6 md:py-10">
+      <section className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-5 sm:px-6 md:py-10">
         <Button variant="ghost" size="sm" className="w-fit" asChild>
           <Link href="/">
             <ArrowLeft className="size-4" aria-hidden="true" />
-            Home
+            Back
           </Link>
         </Button>
 
-        <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#d8ccbd] bg-white px-3 py-1 text-sm font-medium text-[#51624b]">
-            <PartyPopper className="size-4" aria-hidden="true" />
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold leading-tight text-[#171717]">
             Post a plan
-          </div>
-          <div className="space-y-2">
-            <h1 className="text-3xl font-semibold leading-tight text-[#171717] sm:text-4xl">
-              What&apos;s happening?
-            </h1>
-            <p className="max-w-xl text-sm leading-6 text-[#615b52] sm:text-base">
-              Keep it casual. InternHub just needs enough detail for people to
-              show up.
-            </p>
-          </div>
+          </h1>
+          <p className="max-w-xl text-sm leading-6 text-[#615b52]">
+            Add the basics. People can decide from there.
+          </p>
         </div>
 
-        <form
-          className="rounded-lg border border-[#ded6cb] bg-white p-4 shadow-sm sm:p-6"
-          onSubmit={handleSubmit(onSubmit)}
-        >
-          <div className="grid gap-5">
-            <Field label="What's the plan?" error={errors.title?.message}>
-              <input
-                className={fieldClassName}
-                placeholder="Lake Union picnic after work"
-                type="text"
-                {...register("title")}
+        {isCheckingAuth ? (
+          <div className="rounded-lg border border-[#ded6cb] bg-white p-5 text-sm text-[#615b52] shadow-sm">
+            <div className="flex items-center gap-2">
+              <Loader2
+                className="size-4 animate-spin text-[#51624b]"
+                aria-hidden="true"
               />
-            </Field>
-
-            <Field label="Add a few details" error={errors.description?.message}>
-              <textarea
-                className={`${fieldClassName} min-h-28 resize-y py-2`}
-                placeholder="What should people bring? Who is this for?"
-                {...register("description")}
-              />
-            </Field>
-
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Field label="Where?" error={errors.location?.message}>
-                <div className="relative">
-                  <MapPin
-                    className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#756f66]"
-                    aria-hidden="true"
-                  />
-                  <input
-                    className={`${fieldClassName} pl-9`}
-                    placeholder="Lake Union Park"
-                    type="text"
-                    {...register("location")}
-                  />
-                </div>
-              </Field>
-
-              <Field label="What kind of plan?" error={errors.category?.message}>
-                <select className={fieldClassName} {...register("category")}>
-                  {eventCategories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            </div>
-
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Field label="When?" error={errors.starts_at?.message}>
-                <div className="relative">
-                  <CalendarDays
-                    className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#756f66]"
-                    aria-hidden="true"
-                  />
-                  <input
-                    className={`${fieldClassName} pl-9`}
-                    type="datetime-local"
-                    {...register("starts_at")}
-                  />
-                </div>
-              </Field>
-
-              <Field label="Ends when?" error={errors.ends_at?.message}>
-                <input
-                  className={fieldClassName}
-                  type="datetime-local"
-                  {...register("ends_at")}
-                />
-              </Field>
-            </div>
-
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Field label="Drop the chat link" error={errors.chat_link?.message}>
-                <input
-                  className={fieldClassName}
-                  placeholder="https://..."
-                  type="url"
-                  {...register("chat_link")}
-                />
-              </Field>
-
-              <Field label="Cap it at" error={errors.capacity?.message}>
-                <input
-                  className={fieldClassName}
-                  inputMode="numeric"
-                  min={1}
-                  placeholder="No limit"
-                  type="number"
-                  {...register("capacity")}
-                />
-              </Field>
-            </div>
-
-            {submitError ? (
-              <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                {submitError}
-              </p>
-            ) : null}
-
-            <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
-              <Button variant="outline" type="button" asChild>
-                <Link href="/">Cancel</Link>
-              </Button>
-              <Button
-                className="bg-[#1f3025] text-white hover:bg-[#2b4434]"
-                disabled={isSubmitting}
-                type="submit"
-              >
-                {isSubmitting ? (
-                  <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                ) : null}
-                Post event
-              </Button>
+              Checking login...
             </div>
           </div>
-        </form>
+        ) : (
+          <form
+            className="rounded-lg border border-[#ded6cb] bg-white p-4 shadow-sm sm:p-6"
+            onSubmit={handleSubmit(onSubmit)}
+          >
+            <div className="grid gap-5">
+              <Field label="What's the plan?" error={errors.title?.message}>
+                <input
+                  className={fieldClassName}
+                  placeholder="Lake Union picnic after work"
+                  type="text"
+                  {...register("title")}
+                />
+              </Field>
+
+              <Field
+                label="Add a few details"
+                error={errors.description?.message}
+              >
+                <textarea
+                  className={`${fieldClassName} min-h-28 resize-y py-2`}
+                  placeholder="What should people bring? Who is this for?"
+                  {...register("description")}
+                />
+              </Field>
+
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="Where?" error={errors.location?.message}>
+                  <div className="relative">
+                    <MapPin
+                      className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#756f66]"
+                      aria-hidden="true"
+                    />
+                    <input
+                      className={`${fieldClassName} pl-9`}
+                      placeholder="Lake Union Park"
+                      type="text"
+                      {...register("location")}
+                    />
+                  </div>
+                </Field>
+
+                <Field
+                  label="What kind of plan?"
+                  error={errors.category?.message}
+                >
+                  <select className={fieldClassName} {...register("category")}>
+                    {eventCategories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="When?" error={errors.starts_at?.message}>
+                  <div className="relative">
+                    <CalendarDays
+                      className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#756f66]"
+                      aria-hidden="true"
+                    />
+                    <input
+                      className={`${fieldClassName} pl-9`}
+                      type="datetime-local"
+                      {...register("starts_at")}
+                    />
+                  </div>
+                </Field>
+
+                <Field label="Ends when?" error={errors.ends_at?.message}>
+                  <input
+                    className={fieldClassName}
+                    type="datetime-local"
+                    {...register("ends_at")}
+                  />
+                </Field>
+              </div>
+
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field
+                  label="Drop the chat link"
+                  error={errors.chat_link?.message}
+                >
+                  <input
+                    className={fieldClassName}
+                    placeholder="https://..."
+                    type="url"
+                    {...register("chat_link")}
+                  />
+                </Field>
+
+                <Field label="Cap it at" error={errors.capacity?.message}>
+                  <input
+                    className={fieldClassName}
+                    inputMode="numeric"
+                    min={1}
+                    placeholder="No limit"
+                    type="number"
+                    {...register("capacity")}
+                  />
+                </Field>
+              </div>
+
+              {submitError ? (
+                <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {submitError}
+                </p>
+              ) : null}
+
+              <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+                <Button variant="outline" type="button" asChild>
+                  <Link href="/">Cancel</Link>
+                </Button>
+                <Button
+                  className="bg-[#1f3025] text-white hover:bg-[#2b4434]"
+                  disabled={isSubmitting}
+                  type="submit"
+                >
+                  {isSubmitting ? (
+                    <Loader2
+                      className="size-4 animate-spin"
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                  Post event
+                </Button>
+              </div>
+            </div>
+          </form>
+        )}
       </section>
     </main>
   );

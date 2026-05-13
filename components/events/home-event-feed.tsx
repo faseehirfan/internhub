@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AlertCircle, Loader2 } from "lucide-react";
 
 import { CategoryFilter } from "@/components/events/category-filter";
 import { EmptyState } from "@/components/events/empty-state";
 import { EventFeed } from "@/components/events/event-feed";
-import { Button } from "@/components/ui/button";
 import {
   eventCategories,
   type Category,
@@ -41,6 +41,7 @@ type EventGroup = {
 };
 
 export function HomeEventFeed() {
+  const router = useRouter();
   const [events, setEvents] = useState<Event[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,6 +57,15 @@ export function HomeEventFeed() {
       setError(null);
 
       const supabase = createSupabaseClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+
       const now = new Date().toISOString();
 
       const { data: eventRows, error: eventsError } = await supabase
@@ -128,7 +138,7 @@ export function HomeEventFeed() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [router]);
 
   const filteredEvents = useMemo(() => {
     if (selectedCategory === "All") {
@@ -146,14 +156,9 @@ export function HomeEventFeed() {
   return (
     <>
       <section aria-labelledby="categories-heading" className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <h2 id="categories-heading" className="text-sm font-semibold">
-            Browse by category
-          </h2>
-          <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
-            View calendar
-          </Button>
-        </div>
+        <h2 id="categories-heading" className="text-sm font-semibold">
+          Browse
+        </h2>
 
         <CategoryFilter
           categories={[...eventCategories]}
@@ -163,19 +168,14 @@ export function HomeEventFeed() {
       </section>
 
       <section aria-labelledby="events-heading" className="space-y-4">
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="text-sm font-medium text-[#65705f]">Upcoming</p>
-            <h2
-              id="events-heading"
-              className="text-2xl font-semibold text-[#171717]"
-            >
-              Plans worth showing up for
-            </h2>
-          </div>
-          <Button className="hidden bg-[#1f3025] text-white hover:bg-[#2b4434] sm:inline-flex">
-            Post event
-          </Button>
+        <div>
+          <p className="text-sm font-medium text-[#65705f]">Upcoming</p>
+          <h2
+            id="events-heading"
+            className="text-2xl font-semibold tracking-tight text-[#171717]"
+          >
+            Plans
+          </h2>
         </div>
 
         {isLoading ? <EventFeedLoading /> : null}

@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   CalendarDays,
@@ -15,6 +16,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import type { Category, RSVPStatus } from "@/lib/types";
+import { upsertProfile } from "@/src/lib/supabase/profile";
 import { createSupabaseClient } from "@/src/lib/supabase/client";
 
 type EventRow = {
@@ -55,6 +57,7 @@ type CommentWithAuthor = CommentRow & {
 type RSVPCounts = Record<RSVPStatus, number>;
 
 export function EventDetail({ eventId }: { eventId: string }) {
+  const router = useRouter();
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [event, setEvent] = useState<EventRow | null>(null);
   const [creatorName, setCreatorName] = useState("Someone");
@@ -90,7 +93,13 @@ export function EventDetail({ eventId }: { eventId: string }) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    setCurrentUserId(user?.id ?? null);
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
+
+    await upsertProfile(supabase, user);
+    setCurrentUserId(user.id);
 
     const { data: eventRow, error: eventError } = await supabase
       .from("events")
@@ -155,11 +164,11 @@ export function EventDetail({ eventId }: { eventId: string }) {
     );
     setCounts(countRSVPs(typedRsvps));
     setCurrentRSVP(
-      typedRsvps.find((rsvp) => rsvp.user_id === user?.id)?.status ?? null,
+      typedRsvps.find((rsvp) => rsvp.user_id === user.id)?.status ?? null,
     );
     setComments(mapComments(typedComments, commentProfiles ?? []));
     setIsLoading(false);
-  }, [eventId, supabase]);
+  }, [eventId, router, supabase]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -171,7 +180,7 @@ export function EventDetail({ eventId }: { eventId: string }) {
 
   async function saveRSVP(status: RSVPStatus) {
     if (!currentUserId) {
-      setError("Sign in before RSVPing.");
+      router.push("/login");
       return;
     }
 
@@ -201,7 +210,7 @@ export function EventDetail({ eventId }: { eventId: string }) {
     formEvent.preventDefault();
 
     if (!currentUserId) {
-      setError("Sign in before commenting.");
+      router.push("/login");
       return;
     }
 
@@ -414,11 +423,11 @@ export function EventDetail({ eventId }: { eventId: string }) {
 function DetailShell({ children }: { children: React.ReactNode }) {
   return (
     <main className="min-h-screen bg-[#f7f4ef] text-foreground">
-      <section className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-5 sm:px-6 md:py-10">
+      <section className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-5 sm:px-6 md:py-10">
         <Button variant="ghost" size="sm" className="w-fit" asChild>
           <Link href="/">
             <ArrowLeft className="size-4" aria-hidden="true" />
-            Home
+            Back
           </Link>
         </Button>
         {children}

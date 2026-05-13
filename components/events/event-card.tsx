@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CalendarDays, MapPin, Plus } from "lucide-react";
 
 import { RSVPCounts } from "@/components/events/rsvp-counts";
@@ -25,8 +26,11 @@ export function EventCard({ event }: EventCardProps) {
           size="icon"
           className="rounded-full"
           aria-label={`Open ${event.title}`}
+          asChild
         >
-          <Plus className="size-4" aria-hidden="true" />
+          <Link href={`/events/${event.id}`}>
+            <Plus className="size-4" aria-hidden="true" />
+          </Link>
         </Button>
       </div>
 

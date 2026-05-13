@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CalendarX } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -20,8 +21,11 @@ export function EmptyState({
       <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#615b52]">
         {description}
       </p>
-      <Button className="mt-5 bg-[#1f3025] text-white hover:bg-[#2b4434]">
-        Post the first event
+      <Button
+        className="mt-5 bg-[#1f3025] text-white hover:bg-[#2b4434]"
+        asChild
+      >
+        <Link href="/create">Post the first event</Link>
       </Button>
     </div>
   );

@@ -2,72 +2,16 @@ import Link from "next/link";
 import {
   CalendarDays,
   Home,
-  MapPin,
   MessageCircle,
   Plus,
   Search,
   Sparkles,
-  Users,
 } from "lucide-react";
 
+import { CategoryFilter } from "@/components/events/category-filter";
+import { EventFeed } from "@/components/events/event-feed";
 import { Button } from "@/components/ui/button";
-
-const categories = [
-  "All",
-  "Social",
-  "Career",
-  "Sports",
-  "Food",
-  "Study",
-  "Outdoors",
-];
-
-const events = [
-  {
-    id: "lake-union-picnic",
-    title: "Lake Union picnic after work",
-    category: "Social",
-    time: "Today, 6:30 PM",
-    location: "Lake Union Park",
-    host: "Maya Chen",
-    rsvps: 38,
-    maybe: 12,
-    note: "Bring snacks, blankets, and anyone from your pod.",
-  },
-  {
-    id: "resume-roast",
-    title: "Resume roast and interview prep",
-    category: "Career",
-    time: "Tomorrow, 5:00 PM",
-    location: "Building 92 Cafe",
-    host: "Intern Council",
-    rsvps: 24,
-    maybe: 8,
-    note: "Casual peer feedback before final manager chats.",
-  },
-  {
-    id: "volleyball",
-    title: "Beach volleyball pickup",
-    category: "Sports",
-    time: "Sat, 11:00 AM",
-    location: "Golden Gardens",
-    host: "Andre Patel",
-    rsvps: 19,
-    maybe: 6,
-    note: "All skill levels. Teams made when people arrive.",
-  },
-  {
-    id: "night-market",
-    title: "International District night market run",
-    category: "Food",
-    time: "Sun, 7:15 PM",
-    location: "Uwajimaya entrance",
-    host: "Nora Ali",
-    rsvps: 31,
-    maybe: 14,
-    note: "Meet at the entrance, split into small food groups.",
-  },
-];
+import { categories, mockEvents } from "@/lib/mock-events";
 
 const navItems = [
   { label: "Home", href: "/", icon: Home, active: true },
@@ -116,21 +60,7 @@ export default function HomePage() {
             </Button>
           </div>
 
-          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
-            {categories.map((category) => (
-              <button
-                key={category}
-                className={
-                  category === "All"
-                    ? "h-9 shrink-0 rounded-full bg-[#1f3025] px-4 text-sm font-medium text-white shadow-sm"
-                    : "h-9 shrink-0 rounded-full border border-[#ddd3c6] bg-white px-4 text-sm font-medium text-[#48433d] transition-colors hover:bg-[#f0ebe3]"
-                }
-                type="button"
-              >
-                {category}
-              </button>
-            ))}
-          </div>
+          <CategoryFilter categories={categories} />
         </section>
 
         <section aria-labelledby="events-heading" className="space-y-4">
@@ -150,61 +80,7 @@ export default function HomePage() {
             </Button>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2">
-            {events.map((event) => (
-              <article
-                key={event.id}
-                className="rounded-lg border border-[#ded6cb] bg-white p-4 shadow-sm transition-transform hover:-translate-y-0.5"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-2">
-                    <span className="inline-flex rounded-full bg-[#e7f0df] px-2.5 py-1 text-xs font-semibold text-[#37522f]">
-                      {event.category}
-                    </span>
-                    <h3 className="text-lg font-semibold leading-snug text-[#171717]">
-                      {event.title}
-                    </h3>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="rounded-full"
-                    aria-label={`Open ${event.title}`}
-                  >
-                    <Plus className="size-4" aria-hidden="true" />
-                  </Button>
-                </div>
-
-                <p className="mt-3 text-sm leading-6 text-[#615b52]">
-                  {event.note}
-                </p>
-
-                <div className="mt-4 grid gap-2 text-sm text-[#4d4943]">
-                  <div className="flex items-center gap-2">
-                    <CalendarDays className="size-4 text-[#84672c]" aria-hidden="true" />
-                    <span>{event.time}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="size-4 text-[#2f6f77]" aria-hidden="true" />
-                    <span>{event.location}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="size-4 text-[#6f4c89]" aria-hidden="true" />
-                    <span>
-                      {event.rsvps} going, {event.maybe} maybe
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between border-t border-[#eee7de] pt-3 text-sm">
-                  <span className="text-[#6b655d]">Hosted by {event.host}</span>
-                  <Button variant="ghost" size="sm">
-                    RSVP
-                  </Button>
-                </div>
-              </article>
-            ))}
-          </div>
+          <EventFeed events={mockEvents} />
         </section>
       </section>
 
